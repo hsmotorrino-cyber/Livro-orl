@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Livro Cirúrgico ORL</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+  :root {
+    --ink:#0f1923;--ink-soft:#3a4a57;--ink-mute:#7a8c99;--rule:#d0dae0;
+    --bg:#f6f8fa;--surface:#fff;--accent:#1a5f7a;--accent-lt:#e8f4f8;
+    --danger:#c0392b;--ouvido:#2e86c1;--nariz:#27ae60;--pediatrica:#8e44ad;
+    --laringo:#d68910;--cervical:#c0392b;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5;min-height:100vh}
+
+  /* HEADER */
+  header{background:var(--ink);color:#fff;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100}
+  .logo{font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.12em;text-transform:uppercase;display:flex;align-items:center;gap:12px}
+  .logo-badge{background:var(--accent);color:#fff;padding:2px 8px;font-size:11px;letter-spacing:.08em;border-radius:2px}
+  .header-actions{display:flex;gap:8px;align-items:center}
+  .sync-status{font-size:11px;color:rgba(255,255,255,.6);font-family:'IBM Plex Mono',monospace;letter-spacing:.04em}
+  .sync-status.ok{color:#5dde8a}
+  .sync-status.err{color:#ff7b6b}
+  .sync-status.loading{color:#ffd97b}
+
+  /* LAYOUT */
+  .shell{max-width:1260px;margin:0 auto;padding:24px 20px}
+
+  /* CONFIG BANNER */
+  .config-banner{background:#fffbe6;border:1px solid #f0d060;border-radius:6px;padding:16px 20px;margin-bottom:20px;display:flex;gap:16px;align-items:flex-start}
+  .config-banner.hidden{display:none}
+  .config-banner-icon{font-size:22px;flex-shrink:0}
+  .config-banner h3{font-size:14px;font-weight:600;margin-bottom:6px;color:#7a5c00}
+  .config-banner p{font-size:13px;color:#5a4200;line-height:1.6}
+  .config-banner code{background:#f5e97a;padding:1px 5px;border-radius:3px;font-size:12px;font-family:'IBM Plex Mono',monospace}
+  .config-url-row{display:flex;gap:8px;margin-top:10px}
+  .config-url-row input{flex:1;padding:7px 10px;border:1px solid #c8a820;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:12px;background:#fffef5}
+  .config-url-row input:focus{outline:none;border-color:#8a6a00}
+
+  /* STATS */
+  .stats-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:24px}
+  .stat-card{background:var(--surface);border:1px solid var(--rule);border-radius:4px;padding:14px 16px}
+  .stat-num{font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:600;color:var(--accent);line-height:1}
+  .stat-label{font-size:11px;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.08em;margin-top:4px}
+  .area-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle;flex-shrink:0}
+  .dot-ouvido{background:var(--ouvido)}.dot-nariz{background:var(--nariz)}.dot-pediatrica{background:var(--pediatrica)}.dot-laringo{background:var(--laringo)}.dot-cervical{background:var(--cervical)}
+
+  /* TOOLBAR */
+  .toolbar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+  .search-wrap{flex:1;min-width:200px;position:relative}
+  .search-wrap input{width:100%;padding:8px 12px 8px 34px;border:1px solid var(--rule);border-radius:4px;font-family:inherit;font-size:13px;background:var(--surface);color:var(--ink)}
+  .search-wrap::before{content:'⌕';position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--ink-mute);font-size:16px}
+  select.filter{padding:8px 10px;border:1px solid var(--rule);border-radius:4px;font-family:inherit;font-size:13px;background:var(--surface);color:var(--ink);cursor:pointer}
+  .btn{padding:8px 14px;border:none;border-radius:4px;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:opacity .15s;white-space:nowrap}
+  .btn:hover{opacity:.85}
+  .btn-primary{background:var(--accent);color:#fff}
+  .btn-ghost{background:var(--surface);border:1px solid var(--rule);color:var(--ink-soft)}
+  .btn-danger{background:var(--danger);color:#fff}
+  .btn-sm{padding:5px 10px;font-size:12px}
+  .btn-add{background:var(--accent-lt);color:var(--accent);border:1px dashed var(--accent);font-size:12px;padding:6px 12px}
+
+  /* TABLE */
+  .table-wrap{background:var(--surface);border:1px solid var(--rule);border-radius:4px;overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  thead tr{background:var(--ink);color:#fff}
+  th{padding:10px 12px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:600;text-align:left;white-space:nowrap}
+  tbody tr{border-bottom:1px solid var(--rule);transition:background .1s}
+  tbody tr:last-child{border-bottom:none}
+  tbody tr:hover{background:var(--accent-lt)}
+  td{padding:10px 12px;color:var(--ink-soft);vertical-align:middle}
+  td.mono{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-mute)}
+  td.patient-name{font-weight:500;color:var(--ink)}
+  .area-pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap}
+  .pill-ouvido{background:#dbeeff;color:var(--ouvido)}.pill-nariz{background:#d5f5e3;color:#1e8449}.pill-pediatrica{background:#f0e6ff;color:#6c3483}.pill-laringo{background:#fef9e7;color:#9a6910}.pill-cervical{background:#fdecea;color:var(--cervical)}
+  .proc-list{display:flex;flex-direction:column;gap:3px}
+  .proc-item{font-size:12px;color:var(--ink-soft)}
+  .proc-surgeon-tag{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-mute);background:var(--bg);border:1px solid var(--rule);border-radius:3px;padding:0 5px;margin-left:4px}
+  .tag-list{display:flex;flex-wrap:wrap;gap:4px}
+  .tag{font-size:11px;background:var(--accent-lt);color:var(--accent);border:1px solid #b5d9e8;border-radius:3px;padding:1px 7px;white-space:nowrap}
+  .empty-row td{text-align:center;padding:40px;color:var(--ink-mute);font-style:italic}
+
+  /* MODAL */
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(15,25,35,.55);z-index:200;align-items:center;justify-content:center;padding:16px}
+  .modal-bg.open{display:flex}
+  .modal{background:var(--surface);border-radius:6px;width:100%;max-width:720px;max-height:92vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.25)}
+  .modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--rule);background:var(--ink);color:#fff;border-radius:6px 6px 0 0;position:sticky;top:0;z-index:10}
+  .modal-title{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase}
+  .modal-close{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1;opacity:.7}
+  .modal-close:hover{opacity:1}
+  .modal-body{padding:20px}
+  .modal-footer{padding:14px 20px;border-top:1px solid var(--rule);display:flex;justify-content:flex-end;gap:8px;background:var(--bg);border-radius:0 0 6px 6px}
+
+  /* FORM */
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .form-group{display:flex;flex-direction:column;gap:4px}
+  .form-group.full{grid-column:1/-1}
+  label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-soft)}
+  label .required{color:var(--danger)}
+  input[type=text],input[type=date],select,textarea{padding:8px 10px;border:1px solid var(--rule);border-radius:4px;font-family:inherit;font-size:13px;color:var(--ink);background:var(--surface);transition:border-color .15s}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
+  textarea{resize:vertical;min-height:80px}
+  .form-section-title{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-mute);border-bottom:1px solid var(--rule);padding-bottom:4px;margin-bottom:2px;grid-column:1/-1}
+
+  /* MULTI-SELECT */
+  .multiselect-wrap{position:relative;grid-column:1/-1}
+  .multiselect-trigger{width:100%;padding:8px 10px;border:1px solid var(--rule);border-radius:4px;font-family:inherit;font-size:13px;color:var(--ink);background:var(--surface);cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:38px}
+  .multiselect-trigger:focus{outline:none;border-color:var(--accent)}
+  .multiselect-trigger-tags{display:flex;flex-wrap:wrap;gap:4px;flex:1}
+  .multiselect-trigger-placeholder{color:var(--ink-mute)}
+  .multiselect-trigger-arrow{color:var(--ink-mute);font-size:11px;flex-shrink:0}
+  .multiselect-dropdown{display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--surface);border:1px solid var(--rule);border-radius:4px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:500;max-height:240px;overflow-y:auto}
+  .multiselect-dropdown.open{display:block}
+  .multiselect-search{padding:8px 10px;border:none;border-bottom:1px solid var(--rule);width:100%;font-family:inherit;font-size:13px;background:var(--bg)}
+  .multiselect-search:focus{outline:none}
+  .multiselect-option{padding:8px 10px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink)}
+  .multiselect-option:hover,.multiselect-option.selected{background:var(--accent-lt)}
+  .multiselect-option input[type=checkbox]{accent-color:var(--accent);width:14px;height:14px;flex-shrink:0}
+  .multiselect-empty{padding:10px;color:var(--ink-mute);font-size:13px;text-align:center}
+
+  /* PROC BLOCKS */
+  #procsContainer{display:flex;flex-direction:column;gap:10px;grid-column:1/-1}
+  .proc-block{border:1px solid var(--rule);border-radius:5px;padding:12px 14px;background:var(--bg)}
+  .proc-block-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .proc-block-num{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.08em}
+  .proc-block-inner{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .proc-block-inner .proc-desc-wrap{grid-column:1/-1;position:relative}
+  .btn-remove-proc{background:none;border:none;color:var(--ink-mute);cursor:pointer;font-size:16px;line-height:1;padding:0 4px}
+  .btn-remove-proc:hover{color:var(--danger)}
+
+  /* AUTOCOMPLETE */
+  .autocomplete-wrap{position:relative}
+  .autocomplete-input{width:100%;padding:8px 10px;border:1px solid var(--rule);border-radius:4px;font-family:inherit;font-size:13px;color:var(--ink);background:var(--surface)}
+  .autocomplete-input:focus{outline:none;border-color:var(--accent)}
+  .autocomplete-dropdown{display:none;position:absolute;top:calc(100% + 2px);left:0;right:0;background:var(--surface);border:1px solid var(--rule);border-radius:4px;box-shadow:0 8px 24px rgba(0,0,0,.14);z-index:600;max-height:220px;overflow-y:auto}
+  .autocomplete-dropdown.open{display:block}
+  .autocomplete-group-label{padding:5px 10px 3px;font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-mute);background:var(--bg);border-bottom:1px solid var(--rule);position:sticky;top:0}
+  .autocomplete-option{padding:7px 12px;font-size:13px;color:var(--ink);cursor:pointer}
+  .autocomplete-option:hover,.autocomplete-option.active{background:var(--accent-lt);color:var(--accent)}
+  .autocomplete-empty{padding:10px 12px;color:var(--ink-mute);font-size:13px}
+
+  /* DETAIL */
+  .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .detail-field.full{grid-column:1/-1}
+  .detail-key{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-mute);margin-bottom:2px}
+  .detail-val{font-size:14px;color:var(--ink)}
+  .detail-val.mono{font-family:'IBM Plex Mono',monospace;font-size:13px}
+  .proc-detail-block{border:1px solid var(--rule);border-radius:4px;padding:10px 12px;background:var(--bg);margin-bottom:6px}
+  .proc-detail-block:last-child{margin-bottom:0}
+  .proc-detail-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+  .proc-detail-desc{font-size:13px;color:var(--ink)}
+  .proc-detail-meta{font-size:12px;color:var(--ink-mute);margin-top:3px}
+
+  /* PAGINATION */
+  .pagination{display:flex;align-items:center;justify-content:space-between;margin-top:14px;font-size:12px;color:var(--ink-mute)}
+  .page-btns{display:flex;gap:4px}
+  .page-btns button{width:28px;height:28px;border:1px solid var(--rule);background:var(--surface);border-radius:4px;cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-soft)}
+  .page-btns button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+  /* TOAST */
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--ink);color:#fff;padding:10px 18px;border-radius:4px;font-size:13px;font-weight:500;z-index:999;opacity:0;transform:translateY(8px);transition:opacity .2s,transform .2s;pointer-events:none}
+  .toast.show{opacity:1;transform:translateY(0)}
+  .toast.success{border-left:4px solid #27ae60}
+  .toast.error{border-left:4px solid var(--danger)}
+
+  @media(max-width:600px){
+    .form-grid,.proc-block-inner,.detail-grid{grid-template-columns:1fr}
+    .proc-block-inner .proc-desc-wrap{grid-column:1}
+    .logo-badge{display:none}
+    header{padding:0 12px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span>Livro Cirúrgico ORL</span>
+    <span class="logo-badge">CHULN · HSM</span>
+  </div>
+  <div class="header-actions">
+    <span class="sync-status" id="syncStatus">⏳ A ligar…</span>
+    <button class="btn btn-ghost btn-sm" onclick="exportCSV()">⬇ CSV</button>
+  </div>
+</header>
+
+<div class="shell">
+
+  <!-- CONFIG BANNER -->
+  <div class="config-banner" id="configBanner">
+    <div class="config-banner-icon">⚙️</div>
+    <div>
+      <h3>Configuração inicial — liga à Google Sheet</h3>
+      <p>
+        1. Abre o ficheiro <code>apps_script_livro_orl.js</code> e copia o conteúdo.<br>
+        2. Na tua Google Sheet: <strong>Extensões → Apps Script</strong> → cola o código → Guarda.<br>
+        3. <strong>Implementar → Nova implementação → Aplicação Web</strong><br>
+        &nbsp;&nbsp;&nbsp;• Executar como: <em>Eu</em> &nbsp;|&nbsp; Acesso: <em>Qualquer utilizador com conta Google</em><br>
+        4. Copia o URL gerado e cola aqui em baixo:
+      </p>
+      <div class="config-url-row">
+        <input type="text" id="scriptUrlInput" placeholder="https://script.google.com/macros/s/…/exec">
+        <button class="btn btn-primary btn-sm" onclick="saveScriptUrl()">Ligar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-bar" id="statsBar"></div>
+
+  <div class="toolbar">
+    <div class="search-wrap">
+      <input type="text" id="searchInput" placeholder="Pesquisar doente, NSC, diagnóstico, cirurgião…" oninput="renderTable()">
+    </div>
+    <select class="filter" id="filterArea" onchange="renderTable()">
+      <option value="">Todas as áreas</option>
+      <option value="Ouvido">Ouvido</option>
+      <option value="Nariz / Seios">Nariz / Seios</option>
+      <option value="Pediátrica">Pediátrica</option>
+      <option value="Laringologia">Laringologia</option>
+      <option value="Cervical">Cervical</option>
+    </select>
+    <select class="filter" id="filterSurgeon" onchange="renderTable()">
+      <option value="">Todos os cirurgiões</option>
+    </select>
+    <button class="btn btn-ghost btn-sm" onclick="loadFromSheet()" title="Recarregar da Sheet">↺</button>
+    <button class="btn btn-primary" onclick="openNewModal()">+ Nova Cirurgia</button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Data</th><th>Doente</th><th>NSC</th><th>Diagnóstico</th>
+          <th>Procedimento(s)</th><th>Ajudante(s)</th><th>Área</th><th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+  <div class="pagination">
+    <span id="pageInfo"></span>
+    <div class="page-btns" id="pageBtns"></div>
+  </div>
+</div>
+
+<!-- MODAL: FORMULÁRIO -->
+<div class="modal-bg" id="formModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="formModalTitle">Nova Cirurgia</span>
+      <button class="modal-close" onclick="closeModal('formModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <span class="form-section-title">Identificação</span>
+        <div class="form-group">
+          <label>Data da Cirurgia <span class="required">*</span></label>
+          <input type="date" id="f_date">
+        </div>
+        <div class="form-group">
+          <label>Área de Atuação <span class="required">*</span></label>
+          <select id="f_area" onchange="onAreaChange()">
+            <option value="">— selecionar —</option>
+            <option>Ouvido</option><option>Nariz / Seios</option>
+            <option>Pediátrica</option><option>Laringologia</option><option>Cervical</option>
+          </select>
+        </div>
+
+        <span class="form-section-title">Dados do Doente</span>
+        <div class="form-group">
+          <label>Nome Completo <span class="required">*</span></label>
+          <input type="text" id="f_name" placeholder="Nome do doente">
+        </div>
+        <div class="form-group">
+          <label>NSC <span class="required">*</span></label>
+          <input type="text" id="f_nsc" placeholder="Nº de Saúde do Cidadão">
+        </div>
+        <div class="form-group">
+          <label>Data de Nascimento</label>
+          <input type="date" id="f_dob">
+        </div>
+        <div class="form-group">
+          <label>Sexo</label>
+          <select id="f_sex">
+            <option value="">—</option><option>Masculino</option><option>Feminino</option>
+          </select>
+        </div>
+
+        <span class="form-section-title">Diagnóstico</span>
+        <div class="form-group full">
+          <label>Diagnóstico <span class="required">*</span></label>
+          <input type="text" id="f_dx" placeholder="ex. Otosclerose bilateral — Orelha direita">
+        </div>
+
+        <span class="form-section-title">Procedimento(s) Realizado(s)</span>
+        <div id="procsContainer"></div>
+        <div style="grid-column:1/-1">
+          <button class="btn btn-add" onclick="addProcBlock()">+ Adicionar procedimento</button>
+        </div>
+
+        <span class="form-section-title">Equipa Cirúrgica</span>
+        <div class="form-group full">
+          <label>Ajudante(s)</label>
+          <div class="multiselect-wrap" id="assistWrap">
+            <button type="button" class="multiselect-trigger" id="assistTrigger" onclick="toggleDropdown('assist')">
+              <span class="multiselect-trigger-tags" id="assistTags">
+                <span class="multiselect-trigger-placeholder">Selecionar ajudante(s)…</span>
+              </span>
+              <span class="multiselect-trigger-arrow">▾</span>
+            </button>
+            <div class="multiselect-dropdown" id="assistDropdown">
+              <input type="text" class="multiselect-search" placeholder="Filtrar…" oninput="filterOptions('assist',this.value)">
+              <div id="assistOptions"></div>
+            </div>
+          </div>
+        </div>
+
+        <span class="form-section-title">Anestesia</span>
+        <div class="form-group">
+          <label>Tipo de Anestesia</label>
+          <select id="f_anes_type">
+            <option value="">—</option><option>Geral</option><option>Local</option>
+            <option>Local + Sedação</option><option>Loco-regional</option>
+          </select>
+        </div>
+
+        <span class="form-section-title">Observações</span>
+        <div class="form-group full">
+          <label>Observações livres</label>
+          <textarea id="f_obs" rows="4" placeholder="Intercorrências, achados, material, tempo cirúrgico…"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('formModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveRecord()">Guardar Registo</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: DETALHE -->
+<div class="modal-bg" id="detailModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Detalhe do Registo</span>
+      <button class="modal-close" onclick="closeModal('detailModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="detail-grid" id="detailContent"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" id="detailEditBtn">Editar</button>
+      <button class="btn btn-danger btn-sm" id="detailDeleteBtn">Eliminar</button>
+      <button class="btn btn-primary btn-sm" onclick="closeModal('detailModal')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── TEAM & CATALOGUE (igual ao anterior) ──────────────────────────────────
+const TEAM = [
+  'Ana Rita Santos','António Fernandes','Beatriz Lima','Bernardo Alves',
+  'Bernardo Baptista','Borges Dinis','César Silva','Cláudia Rosa',
+  'David Farinha','Diana Correia','Diogo Tomé','Francisco Martins',
+  'Inês Martins','João Levy','Joana Pereira','José Lemos',
+  'Leonel Luís','Mafalda Oliveira','Marco Simão','Mariana Caetano',
+  'Mariana Calha','Mariana Correia','Maria José','Otília Ferrão',
+  'Paulo Martins','Paulo Pereira','Rita Peça','Rita Tomás',
+  'Rodrigo Franco','Tiago Eça','Tomás Carvalho','Victor Gouveia','Vítor Oliveira'
+];
+
+const PROC_CAT = {
+  'Ouvido':[
+    {group:'Ouvido externo',items:['Canaloplastia do CAE (exostoses)','Otoplastia','Drenagem de hematoma do pavilhão auricular','Excisão de lesão do pavilhão auricular','Cirurgia de estenose adquirida do CAE']},
+    {group:'Ouvido médio',items:['Miringotomia com colocação de tubos transtimpânicos (TTT)','Remoção de TTT','Timpanotomia exploradora','Miringoplastia (enxerto de gordura do lóbulo)','Timpanoplastia tipo I — fáscia temporalis / cartilagem','Timpanoplastia tipo II com ossiculoplastia (PORP)','Timpanoplastia tipo III com ossiculoplastia (TORP)','Mastoidectomia técnica fechada sem timpanoplastia','Mastoidectomia técnica fechada com timpanoplastia tipo I','Mastoidectomia técnica fechada com timpanoplastia tipo II (PORP)','Mastoidectomia técnica fechada com timpanoplastia tipo III (TORP)','Mastoidectomia técnica fechada com timpanoplastia tipo IV','Mastoidectomia técnica aberta sem timpanoplastia','Mastoidectomia técnica aberta com timpanoplastia tipo II (PORP)','Mastoidectomia técnica aberta com timpanoplastia tipo III (TORP)','Mastoidectomia técnica aberta com timpanoplastia tipo IV','Estapedotomia','Reforço da janela redonda']},
+    {group:'Ouvido avançado / Base lateral do crânio',items:['Implante coclear','Descompressão do nervo facial (3ª porção)','Encerramento de deiscência do canal semicircular lateral','Ressecção lateral do rochedo','Mastoidectomia radical com abordagem fossa média e redução de herniação meningoencefálica']},
+  ],
+  'Nariz / Seios':[
+    {group:'Septo, pirâmide e cornetos',items:['Septoplastia','Turbinoplastia inferior (radiofrequência / eletrocauterização submucosa)','Rinoplastia por abordagem aberta','Rinoplastia por abordagem fechada','Redução de fratura dos OPN','Excisão de quisto nasogeniano']},
+    {group:'CENS funcional',items:['Turbinoplastia média (concha bolhosa)','Etmoidectomia anterior parcial + antrostomia maxilar','Etmoidectomia posterior','Esfenoidotomia','Sinusotomia frontal — Draf I','Sinusotomia frontal — Draf IIa','Sinusotomia frontal — Draf IIb','Sinusotomia frontal — Draf III','Dacriocistorrinostomia (DCR) endoscópica','Descompressão endoscópica da órbita','Laqueação da artéria esfenopalatina']},
+    {group:'CENS avançada / Base do crânio anterior',items:['Encerramento endoscópico de fístula de LCR — teto etmoidal','Encerramento endoscópico de fístula de LCR — esfenoidal','Maxilectomia medial endoscópica','Abordagem endonasal alargada — transelar (adenoma hipofisário)','Abordagem endonasal alargada — transclival (cordoma)','Abordagem endonasal alargada — transcribiforme','Abordagem transmaxilar pterigóidea','Sinusotomia frontal por via externa (bicoronal)','Drenagem de abcesso supraorbitário','Encerramento de fístula oro-antral','Rinectomia total','Exenteração orbitária']},
+  ],
+  'Pediátrica':[
+    {group:'Orofaringe / adenoides',items:['Adenoidectomia','Amigdalectomia','Adenoamigdalectomia','Drenagem de abcesso periamigdalino (AG)','Drenagem de abcesso retrofaríngeo (AG)','Drenagem de abcesso parafaríngeo (AG)']},
+    {group:'Ouvido pediátrico',items:['Miringotomia com TTT','Otoplastia']},
+    {group:'Via aérea e outros',items:['Laringotraqueobroncoscopia rígida diagnóstica','Traqueotomia pediátrica','Frenotomia lingual','PEA-TC sob sedação (BO)']},
+  ],
+  'Laringologia':[
+    {group:'Microcirurgia endolaríngea — benigna / fonocirurgia',items:['Microlaringoscopia direta em suspensão — biópsia da laringe','MLDS — exérese de pólipo da corda vocal','MLDS — exérese de quisto da corda vocal','MLDS — exérese de granuloma da corda vocal','MLDS — cirurgia de Hirano (edema de Reinke)','MLDS — medialização por injeção (hidroxiapatite de cálcio)','MLDS — excisão de papiloma laríngeo + mitomicina C','MLDS — cordotomia posterior']},
+    {group:'Microcirurgia endolaríngea — oncológica (laser CO2)',items:['Cordectomia tipo I (laser CO2)','Cordectomia tipo II (laser CO2)','Cordectomia tipo III (laser CO2)','Cordectomia tipo IV (laser CO2)','Cordectomia tipo Va (laser CO2)','Cordectomia tipo Vb (laser CO2)']},
+    {group:'Cirurgia da laringe — oncológica aberta',items:['Laringectomia total','Laringectomia parcial supraglótica','Laringectomia parcial supracricóidea (cricohioidopexia — CHP)','Faringolaringectomia total']},
+    {group:'Traqueia e esófago',items:['Traqueotomia eletiva','Traqueotomia de urgência','Colocação de prótese fonatória primária','Colocação de prótese fonatória secundária','Esofagoscopia rígida']},
+    {group:'Patologia do sono',items:['Endoscopia sob sono induzido (DISE)','Uvulopalatoplastia (técnica de Fujita)','Uvulopalatofaringoplastia (UPFP)','Faringoplastia de expansão','Amigdalotomia lingual']},
+  ],
+  'Cervical':[
+    {group:'Benigna',items:['Parotidectomia superficial','Parotidectomia total','Submandibulectomia','Tiroidectomia total','Hemi-tiroidectomia','Excisão de quisto do tracto tireoglosso (Sistrunk)','Excisão de quisto branquial','Cervicotomia exploradora','Drenagem de abcesso cervical profundo']},
+    {group:'Oncológica cervical',items:['Esvaziamento ganglionar cervical seletivo (I–III)','Esvaziamento ganglionar cervical seletivo (II–IV)','Esvaziamento ganglionar cervical seletivo (I–V)','Esvaziamento ganglionar cervical modificado radical (I–V)']},
+    {group:'Oncológica cavidade oral / faringe',items:['Glossectomia parcial com encerramento primário','Glossectomia parcial com retalho livre','Pelviglossectomia parcial com mandibulectomia marginal','Pelviglossectomia parcial com mandibulectomia segmentar','Pelviglossectomia parcial com mandibulotomia de acesso','Maxilectomia meso/infra-estrutura','Maxilectomia total','Glossotomia mediana de acesso']},
+  ],
+};
+
+// ── GOOGLE SHEETS BACKEND ─────────────────────────────────────────────────
+const URL_KEY = 'orl_script_url';
+let SCRIPT_URL = localStorage.getItem(URL_KEY) || '';
+let records = [];
+let editingId = null;
+const PAGE_SIZE = 15;
+let currentPage = 1;
+
+function setSyncStatus(msg, cls='') {
+  const el = document.getElementById('syncStatus');
+  el.textContent = msg;
+  el.className = 'sync-status ' + cls;
+}
+
+function saveScriptUrl() {
+  const val = document.getElementById('scriptUrlInput').value.trim();
+  if (!val.startsWith('https://script.google.com')) {
+    showToast('URL inválido — verifica o link do Apps Script','error'); return;
+  }
+  SCRIPT_URL = val;
+  localStorage.setItem(URL_KEY, val);
+  document.getElementById('configBanner').classList.add('hidden');
+  loadFromSheet();
+}
+
+async function loadFromSheet() {
+  if (!SCRIPT_URL) { setSyncStatus('⚠ Sem URL','err'); renderTable(); return; }
+  setSyncStatus('⏳ A carregar…','loading');
+  try {
+    const res = await fetch(SCRIPT_URL);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    records = data.records || [];
+    setSyncStatus('✓ Sincronizado','ok');
+    updateSurgeonFilter();
+    renderStats();
+    renderTable();
+  } catch(e) {
+    setSyncStatus('✗ Erro de ligação','err');
+    showToast('Não foi possível carregar da Sheet: ' + e.message,'error');
+  }
+}
+
+async function postToSheet(payload) {
+  if (!SCRIPT_URL) { showToast('Sem ligação à Google Sheet','error'); return false; }
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method:'POST',
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || 'Erro desconhecido');
+    return true;
+  } catch(e) {
+    showToast('Erro ao guardar: ' + e.message,'error');
+    return false;
+  }
+}
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+// ── AREA META ─────────────────────────────────────────────────────────────
+const AREA_META = {
+  'Ouvido':        {cls:'ouvido',    dot:'dot-ouvido',    pill:'pill-ouvido'},
+  'Nariz / Seios': {cls:'nariz',     dot:'dot-nariz',     pill:'pill-nariz'},
+  'Pediátrica':    {cls:'pediatrica',dot:'dot-pediatrica',pill:'pill-pediatrica'},
+  'Laringologia':  {cls:'laringo',   dot:'dot-laringo',   pill:'pill-laringo'},
+  'Cervical':      {cls:'cervical',  dot:'dot-cervical',  pill:'pill-cervical'},
+};
+
+// ── AUTOCOMPLETE ──────────────────────────────────────────────────────────
+let acActive = -1;
+function buildACOptions(inputEl, dropEl, query) {
+  const area = document.getElementById('f_area').value;
+  const groups = area ? (PROC_CAT[area]||[]) : Object.values(PROC_CAT).flat();
+  const q = query.toLowerCase();
+  dropEl.innerHTML = '';
+  let total = 0;
+  groups.forEach(g => {
+    const matches = g.items.filter(i => i.toLowerCase().includes(q));
+    if (!matches.length) return;
+    const lbl = document.createElement('div');
+    lbl.className = 'autocomplete-group-label';
+    lbl.textContent = g.group;
+    dropEl.appendChild(lbl);
+    matches.forEach(item => {
+      const opt = document.createElement('div');
+      opt.className = 'autocomplete-option';
+      opt.textContent = item;
+      opt.onmousedown = (e) => { e.preventDefault(); inputEl.value = item; dropEl.classList.remove('open'); acActive = -1; };
+      dropEl.appendChild(opt);
+      total++;
+    });
+  });
+  if (!total) dropEl.innerHTML = '<div class="autocomplete-empty">Sem sugestões — escreva livremente</div>';
+  dropEl.classList.add('open');
+  acActive = -1;
+}
+function acKeydown(e, dropEl) {
+  const opts = [...dropEl.querySelectorAll('.autocomplete-option')];
+  if (!opts.length) return;
+  if (e.key==='ArrowDown'){e.preventDefault();acActive=Math.min(acActive+1,opts.length-1);}
+  else if (e.key==='ArrowUp'){e.preventDefault();acActive=Math.max(acActive-1,0);}
+  else if (e.key==='Enter'&&acActive>=0){e.preventDefault();opts[acActive].onmousedown(e);return;}
+  else if (e.key==='Escape'){dropEl.classList.remove('open');return;}
+  opts.forEach((o,i)=>o.classList.toggle('active',i===acActive));
+  if(acActive>=0) opts[acActive].scrollIntoView({block:'nearest'});
+}
+function onAreaChange() {
+  document.querySelectorAll('#procsContainer .proc-block').forEach(b => {
+    const inp = b.querySelector('.proc-desc-input');
+    const drop = b.querySelector('.autocomplete-dropdown');
+    if (inp&&drop&&drop.classList.contains('open')) buildACOptions(inp,drop,inp.value);
+  });
+}
+
+// ── MULTI-SELECT ──────────────────────────────────────────────────────────
+const msState = {assist: new Set()};
+function buildOptions(key, filter='') {
+  const container = document.getElementById(key+'Options');
+  const fl = filter.toLowerCase();
+  const names = TEAM.filter(n => !fl||n.toLowerCase().includes(fl));
+  if (!names.length){container.innerHTML='<div class="multiselect-empty">Sem resultados</div>';return;}
+  container.innerHTML = names.map(n=>`<label class="multiselect-option${msState[key].has(n)?' selected':''}"><input type="checkbox" ${msState[key].has(n)?'checked':''} onchange="toggleOption('${key}','${n}',this.checked)">${n}</label>`).join('');
+}
+function toggleOption(key,name,checked){if(checked)msState[key].add(name);else msState[key].delete(name);renderTrigger(key);buildOptions(key,document.querySelector('#'+key+'Dropdown .multiselect-search').value);}
+function renderTrigger(key){const el=document.getElementById(key+'Tags');const s=[...msState[key]];el.innerHTML=s.length?s.map(n=>`<span class="tag">${n}</span>`).join(''):'<span class="multiselect-trigger-placeholder">Selecionar ajudante(s)…</span>';}
+function toggleDropdown(key){const dd=document.getElementById(key+'Dropdown');const isOpen=dd.classList.contains('open');closeAllDropdowns();if(!isOpen){dd.classList.add('open');buildOptions(key);dd.querySelector('.multiselect-search').value='';dd.querySelector('.multiselect-search').focus();}}
+function filterOptions(key,val){buildOptions(key,val);}
+function closeAllDropdowns(){document.querySelectorAll('.multiselect-dropdown,.autocomplete-dropdown').forEach(d=>d.classList.remove('open'));}
+document.addEventListener('click',e=>{if(!e.target.closest('.multiselect-wrap')&&!e.target.closest('.autocomplete-wrap'))closeAllDropdowns();});
+function setAssistants(arr){msState.assist=new Set(arr||[]);renderTrigger('assist');}
+function getAssistants(){return[...msState.assist];}
+
+// ── FILTER / STATS / TABLE ─────────────────────────────────────────────────
+function filteredRecords() {
+  const q=document.getElementById('searchInput').value.toLowerCase();
+  const fa=document.getElementById('filterArea').value;
+  const fs=document.getElementById('filterSurgeon').value;
+  return records.filter(r=>{
+    const procText=(r.procs||[]).map(p=>`${p.desc} ${p.surgeon}`).join(' ');
+    const hay=[r.name,r.nsc,r.dx,r.obs,procText,(r.assists||[]).join(' ')].join(' ').toLowerCase();
+    const surgeons=(r.procs||[]).map(p=>p.surgeon);
+    return(!q||hay.includes(q))&&(!fa||r.area===fa)&&(!fs||surgeons.includes(fs));
+  }).sort((a,b)=>b.date.localeCompare(a.date));
+}
+
+function renderStats() {
+  const counts={};
+  records.forEach(r=>{counts[r.area]=(counts[r.area]||0)+1;});
+  let html=`<div class="stat-card"><div class="stat-num">${records.length}</div><div class="stat-label">Total</div></div>`;
+  Object.entries(AREA_META).forEach(([a,m])=>{html+=`<div class="stat-card"><div class="stat-num" style="color:var(--${m.cls})">${counts[a]||0}</div><div class="stat-label"><span class="area-dot ${m.dot}"></span>${a}</div></div>`;});
+  document.getElementById('statsBar').innerHTML=html;
+}
+
+function updateSurgeonFilter() {
+  const sel=document.getElementById('filterSurgeon');const val=sel.value;
+  const all=new Set();records.forEach(r=>(r.procs||[]).forEach(p=>{if(p.surgeon)all.add(p.surgeon);}));
+  sel.innerHTML='<option value="">Todos os cirurgiões</option>'+[...all].sort((a,b)=>a.localeCompare(b,'pt')).map(s=>`<option${s===val?' selected':''}>${s}</option>`).join('');
+}
+
+function renderTable() {
+  const fr=filteredRecords();
+  const totalPages=Math.max(1,Math.ceil(fr.length/PAGE_SIZE));
+  if(currentPage>totalPages)currentPage=totalPages;
+  const slice=fr.slice((currentPage-1)*PAGE_SIZE,currentPage*PAGE_SIZE);
+  const tbody=document.getElementById('tableBody');
+  if(!slice.length){tbody.innerHTML=`<tr class="empty-row"><td colspan="8">Nenhum registo encontrado.</td></tr>`;} else {
+    tbody.innerHTML=slice.map(r=>{
+      const m=AREA_META[r.area]||{};
+      const procs=r.procs||[];
+      const procHtml=procs.length?`<div class="proc-list">${procs.map(p=>`<div class="proc-item">${esc(p.desc).slice(0,48)}${p.desc.length>48?'…':''}<span class="proc-surgeon-tag">${esc(p.surgeon)}</span></div>`).join('')}</div>`:'—';
+      const assists=r.assists||[];
+      const assistHtml=assists.length?`<div class="tag-list">${assists.map(a=>`<span class="tag">${esc(a)}</span>`).join('')}</div>`:'<span style="color:var(--ink-mute)">—</span>';
+      return`<tr><td class="mono">${fmtDate(r.date)}</td><td class="patient-name">${esc(r.name)}</td><td class="mono">${esc(r.nsc)}</td><td>${esc(r.dx)}</td><td>${procHtml}</td><td>${assistHtml}</td><td><span class="area-pill ${m.pill||''}"><span class="area-dot ${m.dot||''}"></span>${esc(r.area)}</span></td><td style="white-space:nowrap"><button class="btn btn-ghost btn-sm" onclick="openDetail('${r.id}')">Ver</button> <button class="btn btn-ghost btn-sm" onclick="openEditModal('${r.id}')">Editar</button></td></tr>`;
+    }).join('');
+  }
+  document.getElementById('pageInfo').textContent=`${fr.length} registo${fr.length!==1?'s':''} · pág. ${currentPage}/${totalPages}`;
+  const pb=document.getElementById('pageBtns');pb.innerHTML='';
+  if(totalPages>1){for(let p=1;p<=totalPages;p++){const b=document.createElement('button');b.textContent=p;if(p===currentPage)b.classList.add('active');b.onclick=()=>{currentPage=p;renderTable();};pb.appendChild(b);}}
+}
+
+function fmtDate(d){if(!d)return'—';const[y,m,dd]=d.split('-');return`${dd}/${m}/${y}`;}
+function esc(s=''){return(s+'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// ── PROC BLOCKS ───────────────────────────────────────────────────────────
+let procCount=0;
+function addProcBlock(desc='',surgeon=''){
+  procCount++;
+  const container=document.getElementById('procsContainer');
+  const div=document.createElement('div');
+  div.className='proc-block';
+  div.innerHTML=`<div class="proc-block-header"><span class="proc-block-num">Procedimento ${container.children.length+1}</span><button type="button" class="btn-remove-proc" onclick="removeProcBlock(this)">✕</button></div><div class="proc-block-inner"><div class="form-group proc-desc-wrap"><label>Descrição <span class="required">*</span></label><div class="autocomplete-wrap"><input type="text" class="autocomplete-input proc-desc-input" placeholder="Escrever ou escolher da lista…" value="${esc(desc)}" autocomplete="off" oninput="buildACOptions(this,this.closest('.autocomplete-wrap').querySelector('.autocomplete-dropdown'),this.value)" onfocus="buildACOptions(this,this.closest('.autocomplete-wrap').querySelector('.autocomplete-dropdown'),this.value)" onkeydown="acKeydown(event,this.closest('.autocomplete-wrap').querySelector('.autocomplete-dropdown'))"><div class="autocomplete-dropdown"></div></div></div><div class="form-group"><label>Cirurgião <span class="required">*</span></label><select class="proc-surgeon-input"><option value="">— selecionar —</option>${TEAM.map(n=>`<option${n===surgeon?' selected':''}>${n}</option>`).join('')}</select></div></div>`;
+  container.appendChild(div);
+  renumberProcs();
+}
+function removeProcBlock(btn){btn.closest('.proc-block').remove();renumberProcs();}
+function renumberProcs(){document.querySelectorAll('#procsContainer .proc-block').forEach((b,i)=>{b.querySelector('.proc-block-num').textContent=`Procedimento ${i+1}`;});}
+function getProcs(){return[...document.querySelectorAll('#procsContainer .proc-block')].map(b=>({desc:b.querySelector('.proc-desc-input').value.trim(),surgeon:b.querySelector('.proc-surgeon-input').value}));}
+function setProcs(procs){document.getElementById('procsContainer').innerHTML='';procCount=0;(procs||[]).forEach(p=>addProcBlock(p.desc,p.surgeon));if(!procs||!procs.length)addProcBlock();}
+
+// ── FORM ──────────────────────────────────────────────────────────────────
+function openNewModal(){editingId=null;clearForm();document.getElementById('formModalTitle').textContent='Nova Cirurgia';openModal('formModal');}
+function openEditModal(id){
+  editingId=id;const r=records.find(x=>x.id===id);if(!r)return;
+  document.getElementById('formModalTitle').textContent='Editar Registo';
+  setField('f_date',r.date);setField('f_area',r.area);setField('f_name',r.name);setField('f_nsc',r.nsc);
+  setField('f_dob',r.dob);setField('f_sex',r.sex);setField('f_dx',r.dx);
+  setField('f_anes_type',r.anes_type);setField('f_obs',r.obs);
+  setProcs(r.procs);setAssistants(r.assists||[]);
+  closeModal('detailModal');openModal('formModal');
+}
+function setField(id,val){const el=document.getElementById(id);if(el)el.value=val||'';}
+function clearForm(){
+  ['f_date','f_area','f_name','f_nsc','f_dob','f_sex','f_dx','f_anes_type','f_obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('f_date').value=new Date().toISOString().split('T')[0];
+  setProcs([]);setAssistants([]);
+}
+
+async function saveRecord(){
+  const date=document.getElementById('f_date').value;
+  const area=document.getElementById('f_area').value;
+  const name=document.getElementById('f_name').value.trim();
+  const nsc=document.getElementById('f_nsc').value.trim();
+  const dx=document.getElementById('f_dx').value.trim();
+  const procs=getProcs();
+  const assists=getAssistants();
+  if(!date||!area||!name||!nsc||!dx){showToast('Preencha todos os campos obrigatórios (*)','error');return;}
+  if(!procs.length||procs.some(p=>!p.desc||!p.surgeon)){showToast('Cada procedimento precisa de descrição e cirurgião','error');return;}
+
+  const record={
+    id:editingId||uid(),date,area,name,nsc,
+    dob:document.getElementById('f_dob').value,
+    sex:document.getElementById('f_sex').value,
+    dx,procs,assists,
+    anes_type:document.getElementById('f_anes_type').value,
+    obs:document.getElementById('f_obs').value.trim(),
+    created:editingId?(records.find(r=>r.id===editingId)||{}).created||Date.now():Date.now(),
+    updated:Date.now(),
+  };
+
+  showToast('A guardar…','');
+  const ok = await postToSheet({action:'save', record});
+  if(!ok) return;
+
+  if(editingId){const idx=records.findIndex(r=>r.id===editingId);if(idx>-1)records[idx]=record;}
+  else records.unshift(record);
+
+  showToast(editingId?'Registo atualizado ✓':'Registo guardado ✓','success');
+  closeModal('formModal');
+  updateSurgeonFilter();renderStats();renderTable();
+}
+
+// ── DETAIL ────────────────────────────────────────────────────────────────
+function openDetail(id){
+  const r=records.find(x=>x.id===id);if(!r)return;
+  const m=AREA_META[r.area]||{};
+  const procsHtml=(r.procs||[]).map((p,i)=>`<div class="proc-detail-block"><div class="proc-detail-label">Procedimento ${i+1}</div><div class="proc-detail-desc">${esc(p.desc)}</div><div class="proc-detail-meta">Cirurgião: <strong>${esc(p.surgeon)}</strong></div></div>`).join('');
+  const assists=r.assists||[];
+  const assistHtml=assists.length?`<div class="tag-list">${assists.map(a=>`<span class="tag">${esc(a)}</span>`).join('')}</div>`:'—';
+  document.getElementById('detailContent').innerHTML=`
+    <div class="detail-field"><div class="detail-key">Data</div><div class="detail-val mono">${fmtDate(r.date)}</div></div>
+    <div class="detail-field"><div class="detail-key">Área</div><div class="detail-val"><span class="area-pill ${m.pill||''}"><span class="area-dot ${m.dot||''}"></span>${esc(r.area)}</span></div></div>
+    <div class="detail-field"><div class="detail-key">Nome do Doente</div><div class="detail-val">${esc(r.name)}</div></div>
+    <div class="detail-field"><div class="detail-key">NSC</div><div class="detail-val mono">${esc(r.nsc)}</div></div>
+    <div class="detail-field"><div class="detail-key">Data de Nascimento</div><div class="detail-val">${r.dob?fmtDate(r.dob):'—'}</div></div>
+    <div class="detail-field"><div class="detail-key">Sexo</div><div class="detail-val">${esc(r.sex)||'—'}</div></div>
+    <div class="detail-field full"><div class="detail-key">Diagnóstico</div><div class="detail-val">${esc(r.dx)}</div></div>
+    <div class="detail-field full"><div class="detail-key">Procedimento(s)</div><div class="detail-val">${procsHtml}</div></div>
+    <div class="detail-field full"><div class="detail-key">Ajudante(s)</div><div class="detail-val">${assistHtml}</div></div>
+    <div class="detail-field"><div class="detail-key">Tipo de Anestesia</div><div class="detail-val">${esc(r.anes_type)||'—'}</div></div>
+    ${r.obs?`<div class="detail-field full"><div class="detail-key">Observações</div><div class="detail-val" style="white-space:pre-wrap">${esc(r.obs)}</div></div>`:''}`;
+  document.getElementById('detailEditBtn').onclick=()=>openEditModal(id);
+  document.getElementById('detailDeleteBtn').onclick=()=>deleteRecord(id);
+  openModal('detailModal');
+}
+
+async function deleteRecord(id){
+  if(!confirm('Eliminar este registo? Esta ação não pode ser desfeita.'))return;
+  const ok=await postToSheet({action:'delete',id});
+  if(!ok)return;
+  records=records.filter(r=>r.id!==id);
+  closeModal('detailModal');updateSurgeonFilter();renderStats();renderTable();
+  showToast('Registo eliminado','error');
+}
+
+// ── EXPORT CSV ────────────────────────────────────────────────────────────
+function exportCSV(){
+  const fr=filteredRecords();
+  const rows=[['data','area','nome','nsc','nasc','sexo','diagnostico','procedimento','cirurgiao','ajudantes','anestesia','observacoes'].join(';')];
+  fr.forEach(r=>{
+    const base=[r.date,r.area,r.name,r.nsc,r.dob||'',r.sex||'',r.dx];
+    const assistStr=(r.assists||[]).join(' / ');
+    (r.procs||[]).forEach(p=>{rows.push([...base,p.desc,p.surgeon,assistStr,r.anes_type||'',r.obs||''].map(v=>`"${(v||'').replace(/"/g,'""')}"`).join(';'));});
+  });
+  const blob=new Blob(['\uFEFF'+rows.join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`livro_cirurgico_orl_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+  showToast(`${fr.length} registos exportados ✓`,'success');
+}
+
+// ── MODAL HELPERS ─────────────────────────────────────────────────────────
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-bg').forEach(bg=>{bg.addEventListener('click',e=>{if(e.target===bg)bg.classList.remove('open');});});
+
+// ── TOAST ─────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg,type='success'){
+  const t=document.getElementById('toast');t.textContent=msg;t.className=`toast ${type} show`;
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+if (SCRIPT_URL) {
+  document.getElementById('configBanner').classList.add('hidden');
+  document.getElementById('scriptUrlInput').value = SCRIPT_URL;
+  loadFromSheet();
+} else {
+  setSyncStatus('⚠ Sem configuração','err');
+  renderStats();
+  renderTable();
+}
+</script>
+</body>
+</html>
