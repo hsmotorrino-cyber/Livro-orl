@@ -79,6 +79,11 @@
   .proc-surgeon-tag{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-mute);background:var(--bg);border:1px solid var(--rule);border-radius:3px;padding:0 5px;margin-left:4px}
   .tag-list{display:flex;flex-wrap:wrap;gap:4px}
   .tag{font-size:11px;background:var(--accent-lt);color:var(--accent);border:1px solid #b5d9e8;border-radius:3px;padding:1px 7px;white-space:nowrap}
+  .lat-tag{font-size:10px;font-family:'IBM Plex Mono',monospace;background:#f0f4f7;color:var(--ink-mute);border:1px solid var(--rule);border-radius:3px;padding:1px 6px;margin-left:4px;white-space:nowrap}
+  .lat-D{background:#e8f4ff;color:#1a5f7a;border-color:#b5d9e8}
+  .lat-E{background:#fff0e8;color:#b84a00;border-color:#f5c9a0}
+  .lat-B{background:#edf7ee;color:#1a6b2a;border-color:#a8ddb0}
+  .lat-NA{background:#f5f5f5;color:#888;border-color:#ccc}
   .empty-row td{text-align:center;padding:40px;color:var(--ink-mute);font-style:italic}
 
   /* MODAL */
@@ -259,12 +264,18 @@
           <input type="date" id="f_date">
         </div>
         <div class="form-group">
-          <label>Área de Atuação <span class="required">*</span></label>
-          <select id="f_area" onchange="onAreaChange()">
-            <option value="">— selecionar —</option>
-            <option>Ouvido</option><option>Nariz / Seios</option>
-            <option>Pediátrica</option><option>Laringologia</option><option>Cervical</option>
-          </select>
+          <label>Área(s) de Atuação <span class="required">*</span></label>
+          <div class="multiselect-wrap" id="areaWrap" style="grid-column:unset">
+            <button type="button" class="multiselect-trigger" id="areaTrigger" onclick="toggleDropdown('area')">
+              <span class="multiselect-trigger-tags" id="areaTags">
+                <span class="multiselect-trigger-placeholder">Selecionar área(s)…</span>
+              </span>
+              <span class="multiselect-trigger-arrow">▾</span>
+            </button>
+            <div class="multiselect-dropdown" id="areaDropdown">
+              <div id="areaOptions"></div>
+            </div>
+          </div>
         </div>
 
         <span class="form-section-title">Dados do Doente</span>
@@ -475,8 +486,8 @@ const AREA_META = {
 // ── AUTOCOMPLETE ──────────────────────────────────────────────────────────
 let acActive = -1;
 function buildACOptions(inputEl, dropEl, query) {
-  const area = document.getElementById('f_area').value;
-  const groups = area ? (PROC_CAT[area]||[]) : Object.values(PROC_CAT).flat();
+  const areas = [...msState.area];
+  const groups = areas.length===1 ? (PROC_CAT[areas[0]]||[]) : areas.length>1 ? areas.flatMap(a=>PROC_CAT[a]||[]) : Object.values(PROC_CAT).flat();
   const q = query.toLowerCase();
   dropEl.innerHTML = '';
   let total = 0;
@@ -519,22 +530,35 @@ function onAreaChange() {
 }
 
 // ── MULTI-SELECT ──────────────────────────────────────────────────────────
-const msState = {assist: new Set()};
+const AREAS = ['Ouvido','Nariz / Seios','Pediátrica','Laringologia','Cervical'];
+const msState = {assist: new Set(), area: new Set()};
 function buildOptions(key, filter='') {
   const container = document.getElementById(key+'Options');
-  const fl = filter.toLowerCase();
-  const names = TEAM.filter(n => !fl||n.toLowerCase().includes(fl));
+  const fl = filter ? filter.toLowerCase() : '';
+  const list = key==='area' ? AREAS : TEAM;
+  const names = list.filter(n => !fl||n.toLowerCase().includes(fl));
   if (!names.length){container.innerHTML='<div class="multiselect-empty">Sem resultados</div>';return;}
   container.innerHTML = names.map(n=>`<label class="multiselect-option${msState[key].has(n)?' selected':''}"><input type="checkbox" ${msState[key].has(n)?'checked':''} onchange="toggleOption('${key}','${n}',this.checked)">${n}</label>`).join('');
 }
 function toggleOption(key,name,checked){if(checked)msState[key].add(name);else msState[key].delete(name);renderTrigger(key);buildOptions(key,document.querySelector('#'+key+'Dropdown .multiselect-search').value);}
-function renderTrigger(key){const el=document.getElementById(key+'Tags');const s=[...msState[key]];el.innerHTML=s.length?s.map(n=>`<span class="tag">${n}</span>`).join(''):'<span class="multiselect-trigger-placeholder">Selecionar ajudante(s)…</span>';}
+function renderTrigger(key){
+  const el=document.getElementById(key+'Tags');
+  const s=[...msState[key]];
+  const placeholder = key==='area' ? 'Selecionar área(s)…' : 'Selecionar ajudante(s)…';
+  if(key==='area'){
+    el.innerHTML=s.length?s.map(n=>{const m=AREA_META[n]||{};return`<span class="area-pill ${m.pill||''}" style="font-size:11px"><span class="area-dot ${m.dot||''}"></span>${n}</span>`;}).join(''):`<span class="multiselect-trigger-placeholder">${placeholder}</span>`;
+  } else {
+    el.innerHTML=s.length?s.map(n=>`<span class="tag">${n}</span>`).join(''):`<span class="multiselect-trigger-placeholder">${placeholder}</span>`;
+  }
+}
 function toggleDropdown(key){const dd=document.getElementById(key+'Dropdown');const isOpen=dd.classList.contains('open');closeAllDropdowns();if(!isOpen){dd.classList.add('open');buildOptions(key);dd.querySelector('.multiselect-search').value='';dd.querySelector('.multiselect-search').focus();}}
 function filterOptions(key,val){buildOptions(key,val);}
 function closeAllDropdowns(){document.querySelectorAll('.multiselect-dropdown,.autocomplete-dropdown').forEach(d=>d.classList.remove('open'));}
 document.addEventListener('click',e=>{if(!e.target.closest('.multiselect-wrap')&&!e.target.closest('.autocomplete-wrap'))closeAllDropdowns();});
 function setAssistants(arr){msState.assist=new Set(arr||[]);renderTrigger('assist');}
 function getAssistants(){return[...msState.assist];}
+function setAreas(arr){msState.area=new Set(arr||[]);renderTrigger('area');onAreaChange();}
+function getAreas(){return[...msState.area];}
 
 // ── FILTER / STATS / TABLE ─────────────────────────────────────────────────
 function filteredRecords() {
@@ -545,13 +569,14 @@ function filteredRecords() {
     const procText=(r.procs||[]).map(p=>`${p.desc} ${p.surgeon}`).join(' ');
     const hay=[r.name,r.nsc,r.dx,r.obs,procText,(r.assists||[]).join(' ')].join(' ').toLowerCase();
     const surgeons=(r.procs||[]).map(p=>p.surgeon);
-    return(!q||hay.includes(q))&&(!fa||r.area===fa)&&(!fs||surgeons.includes(fs));
+    const rAreas=r.areas||[r.area].filter(Boolean);
+    return(!q||hay.includes(q))&&(!fa||rAreas.includes(fa))&&(!fs||surgeons.includes(fs));
   }).sort((a,b)=>b.date.localeCompare(a.date));
 }
 
 function renderStats() {
   const counts={};
-  records.forEach(r=>{counts[r.area]=(counts[r.area]||0)+1;});
+  records.forEach(r=>{(r.areas||[r.area]).filter(Boolean).forEach(a=>{counts[a]=(counts[a]||0)+1;});});
   let html=`<div class="stat-card"><div class="stat-num">${records.length}</div><div class="stat-label">Total</div></div>`;
   Object.entries(AREA_META).forEach(([a,m])=>{html+=`<div class="stat-card"><div class="stat-num" style="color:var(--${m.cls})">${counts[a]||0}</div><div class="stat-label"><span class="area-dot ${m.dot}"></span>${a}</div></div>`;});
   document.getElementById('statsBar').innerHTML=html;
@@ -573,7 +598,7 @@ function renderTable() {
     tbody.innerHTML=slice.map(r=>{
       const m=AREA_META[r.area]||{};
       const procs=r.procs||[];
-      const procHtml=procs.length?`<div class="proc-list">${procs.map(p=>`<div class="proc-item">${esc(p.desc).slice(0,48)}${p.desc.length>48?'…':''}<span class="proc-surgeon-tag">${esc(p.surgeon)}</span></div>`).join('')}</div>`:'—';
+      const procHtml=procs.length?`<div class="proc-list">${procs.map(p=>{const latMap={D:'D',E:'E',B:'Bil',NA:'N/A'};const latLbl=p.lat?`<span class="lat-tag lat-${p.lat}">${latMap[p.lat]||p.lat}</span>`:'';return`<div class="proc-item">${esc(p.desc).slice(0,48)}${p.desc.length>48?'…':''}${latLbl}<span class="proc-surgeon-tag">${esc(p.surgeon)}</span></div>`;}).join('')}</div>`:'—';
       const assists=r.assists||[];
       const assistHtml=assists.length?`<div class="tag-list">${assists.map(a=>`<span class="tag">${esc(a)}</span>`).join('')}</div>`:'<span style="color:var(--ink-mute)">—</span>';
       return`<tr><td class="mono">${fmtDate(r.date)}</td><td class="patient-name">${esc(r.name)}</td><td class="mono">${esc(r.nsc)}</td><td>${esc(r.dx)}</td><td>${procHtml}</td><td>${assistHtml}</td><td><span class="area-pill ${m.pill||''}"><span class="area-dot ${m.dot||''}"></span>${esc(r.area)}</span></td><td style="white-space:nowrap"><button class="btn btn-ghost btn-sm" onclick="openDetail('${r.id}')">Ver</button> <button class="btn btn-ghost btn-sm" onclick="openEditModal('${r.id}')">Editar</button></td></tr>`;
@@ -589,51 +614,52 @@ function esc(s=''){return(s+'').replace(/&/g,'&amp;').replace(/</g,'&lt;').repla
 
 // ── PROC BLOCKS ───────────────────────────────────────────────────────────
 let procCount=0;
-function addProcBlock(desc='',surgeon=''){
+function addProcBlock(desc='',surgeon='',lat=''){
   procCount++;
   const container=document.getElementById('procsContainer');
   const div=document.createElement('div');
   div.className='proc-block';
-  div.innerHTML=`<div class="proc-block-header"><span class="proc-block-num">Procedimento ${container.children.length+1}</span><button type="button" class="btn-remove-proc" onclick="removeProcBlock(this)">✕</button></div><div class="proc-block-inner"><div class="form-group proc-desc-wrap"><label>Descrição <span class="required">*</span></label><div class="autocomplete-wrap"><input type="text" class="autocomplete-input proc-desc-input" placeholder="Escrever ou escolher da lista…" value="${esc(desc)}" autocomplete="off" oninput="buildACOptions(this,this.closest('.autocomplete-wrap').querySelector('.autocomplete-dropdown'),this.value)" onfocus="buildACOptions(this,this.closest('.autocomplete-wrap').querySelector('.autocomplete-dropdown'),this.value)" onkeydown="acKeydown(event,this.closest('.autocomplete-wrap').querySelector('.autocomplete-dropdown'))"><div class="autocomplete-dropdown"></div></div></div><div class="form-group"><label>Cirurgião <span class="required">*</span></label><select class="proc-surgeon-input"><option value="">— selecionar —</option>${TEAM.map(n=>`<option${n===surgeon?' selected':''}>${n}</option>`).join('')}</select></div></div>`;
+  div.innerHTML=`<div class="proc-block-header"><span class="proc-block-num">Procedimento ${container.children.length+1}</span><button type="button" class="btn-remove-proc" onclick="removeProcBlock(this)">✕</button></div><div class="proc-block-inner"><div class="form-group proc-desc-wrap"><label>Descrição <span class="required">*</span></label><div class="autocomplete-wrap"><input type="text" class="autocomplete-input proc-desc-input" placeholder="Escrever ou escolher da lista…" value="${esc(desc)}" autocomplete="off" oninput="buildACOptions(this,this.closest('.autocomplete-wrap').querySelector('.autocomplete-dropdown'),this.value)" onfocus="buildACOptions(this,this.closest('.autocomplete-wrap').querySelector('.autocomplete-dropdown'),this.value)" onkeydown="acKeydown(event,this.closest('.autocomplete-wrap').querySelector('.autocomplete-dropdown'))"><div class="autocomplete-dropdown"></div></div></div><div class="form-group"><label>Cirurgião <span class="required">*</span></label><select class="proc-surgeon-input"><option value="">— selecionar —</option>${TEAM.map(n=>`<option${n===surgeon?' selected':''}>${n}</option>`).join('')}</select></div><div class="form-group"><label>Lateralidade</label><select class="proc-lat-input"><option value="">—</option><option value="D">Direito</option><option value="E">Esquerdo</option><option value="B">Bilateral</option><option value="NA">Não aplicável</option></select></div></div>`;
   container.appendChild(div);
+  if(lat){const s=div.querySelector('.proc-lat-input');if(s)s.value=lat;}
   renumberProcs();
 }
 function removeProcBlock(btn){btn.closest('.proc-block').remove();renumberProcs();}
 function renumberProcs(){document.querySelectorAll('#procsContainer .proc-block').forEach((b,i)=>{b.querySelector('.proc-block-num').textContent=`Procedimento ${i+1}`;});}
-function getProcs(){return[...document.querySelectorAll('#procsContainer .proc-block')].map(b=>({desc:b.querySelector('.proc-desc-input').value.trim(),surgeon:b.querySelector('.proc-surgeon-input').value}));}
-function setProcs(procs){document.getElementById('procsContainer').innerHTML='';procCount=0;(procs||[]).forEach(p=>addProcBlock(p.desc,p.surgeon));if(!procs||!procs.length)addProcBlock();}
+function getProcs(){return[...document.querySelectorAll('#procsContainer .proc-block')].map(b=>({desc:b.querySelector('.proc-desc-input').value.trim(),surgeon:b.querySelector('.proc-surgeon-input').value,lat:b.querySelector('.proc-lat-input').value}));}
+function setProcs(procs){document.getElementById('procsContainer').innerHTML='';procCount=0;(procs||[]).forEach(p=>addProcBlock(p.desc,p.surgeon,p.lat||''));if(!procs||!procs.length)addProcBlock();}
 
 // ── FORM ──────────────────────────────────────────────────────────────────
 function openNewModal(){editingId=null;clearForm();document.getElementById('formModalTitle').textContent='Nova Cirurgia';openModal('formModal');}
 function openEditModal(id){
   editingId=id;const r=records.find(x=>x.id===id);if(!r)return;
   document.getElementById('formModalTitle').textContent='Editar Registo';
-  setField('f_date',r.date);setField('f_area',r.area);setField('f_name',r.name);setField('f_nsc',r.nsc);
+  setField('f_date',r.date);setField('f_name',r.name);setField('f_nsc',r.nsc);
   setField('f_dob',r.dob);setField('f_sex',r.sex);setField('f_dx',r.dx);
   setField('f_anes_type',r.anes_type);setField('f_obs',r.obs);
-  setProcs(r.procs);setAssistants(r.assists||[]);
+  setProcs(r.procs);setAssistants(r.assists||[]);setAreas(r.areas||[r.area].filter(Boolean));
   closeModal('detailModal');openModal('formModal');
 }
 function setField(id,val){const el=document.getElementById(id);if(el)el.value=val||'';}
 function clearForm(){
-  ['f_date','f_area','f_name','f_nsc','f_dob','f_sex','f_dx','f_anes_type','f_obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['f_date','f_name','f_nsc','f_dob','f_sex','f_dx','f_anes_type','f_obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('f_date').value=new Date().toISOString().split('T')[0];
-  setProcs([]);setAssistants([]);
+  setProcs([]);setAssistants([]);setAreas([]);
 }
 
 async function saveRecord(){
   const date=document.getElementById('f_date').value;
-  const area=document.getElementById('f_area').value;
+  const areas=getAreas();
   const name=document.getElementById('f_name').value.trim();
   const nsc=document.getElementById('f_nsc').value.trim();
   const dx=document.getElementById('f_dx').value.trim();
   const procs=getProcs();
   const assists=getAssistants();
-  if(!date||!area||!name||!nsc||!dx){showToast('Preencha todos os campos obrigatórios (*)','error');return;}
+  if(!date||!areas.length||!name||!nsc||!dx){showToast('Preencha todos os campos obrigatórios (*)','error');return;}
   if(!procs.length||procs.some(p=>!p.desc||!p.surgeon)){showToast('Cada procedimento precisa de descrição e cirurgião','error');return;}
 
   const record={
-    id:editingId||uid(),date,area,name,nsc,
+    id:editingId||uid(),date,areas,area:areas[0]||'',name,nsc,
     dob:document.getElementById('f_dob').value,
     sex:document.getElementById('f_sex').value,
     dx,procs,assists,
@@ -659,12 +685,13 @@ async function saveRecord(){
 function openDetail(id){
   const r=records.find(x=>x.id===id);if(!r)return;
   const m=AREA_META[r.area]||{};
-  const procsHtml=(r.procs||[]).map((p,i)=>`<div class="proc-detail-block"><div class="proc-detail-label">Procedimento ${i+1}</div><div class="proc-detail-desc">${esc(p.desc)}</div><div class="proc-detail-meta">Cirurgião: <strong>${esc(p.surgeon)}</strong></div></div>`).join('');
+  const latLabels={D:'Direito',E:'Esquerdo',B:'Bilateral',NA:'Não aplicável'};
+  const procsHtml=(r.procs||[]).map((p,i)=>`<div class="proc-detail-block"><div class="proc-detail-label">Procedimento ${i+1}</div><div class="proc-detail-desc">${esc(p.desc)}${p.lat?` <span class="lat-tag lat-${p.lat}">${latLabels[p.lat]||p.lat}</span>`:''}</div><div class="proc-detail-meta">Cirurgião: <strong>${esc(p.surgeon)}</strong></div></div>`).join('');
   const assists=r.assists||[];
   const assistHtml=assists.length?`<div class="tag-list">${assists.map(a=>`<span class="tag">${esc(a)}</span>`).join('')}</div>`:'—';
   document.getElementById('detailContent').innerHTML=`
     <div class="detail-field"><div class="detail-key">Data</div><div class="detail-val mono">${fmtDate(r.date)}</div></div>
-    <div class="detail-field"><div class="detail-key">Área</div><div class="detail-val"><span class="area-pill ${m.pill||''}"><span class="area-dot ${m.dot||''}"></span>${esc(r.area)}</span></div></div>
+    <div class="detail-field"><div class="detail-key">Área(s)</div><div class="detail-val"><div style="display:flex;flex-wrap:wrap;gap:4px">${(r.areas||[r.area]).filter(Boolean).map(a=>{const ma=AREA_META[a]||{};return`<span class="area-pill ${ma.pill||''}"><span class="area-dot ${ma.dot||''}"></span>${esc(a)}</span>`;}).join('')}</div></div></div>
     <div class="detail-field"><div class="detail-key">Nome do Doente</div><div class="detail-val">${esc(r.name)}</div></div>
     <div class="detail-field"><div class="detail-key">NSC</div><div class="detail-val mono">${esc(r.nsc)}</div></div>
     <div class="detail-field"><div class="detail-key">Data de Nascimento</div><div class="detail-val">${r.dob?fmtDate(r.dob):'—'}</div></div>
@@ -691,11 +718,12 @@ async function deleteRecord(id){
 // ── EXPORT CSV ────────────────────────────────────────────────────────────
 function exportCSV(){
   const fr=filteredRecords();
-  const rows=[['data','area','nome','nsc','nasc','sexo','diagnostico','procedimento','cirurgiao','ajudantes','anestesia','observacoes'].join(';')];
+  const rows=[['data','areas','nome','nsc','nasc','sexo','diagnostico','procedimento','lateralidade','cirurgiao','ajudantes','anestesia','observacoes'].join(';')];
   fr.forEach(r=>{
-    const base=[r.date,r.area,r.name,r.nsc,r.dob||'',r.sex||'',r.dx];
+    const base=[r.date,(r.areas||[r.area]).filter(Boolean).join(' / '),r.name,r.nsc,r.dob||'',r.sex||'',r.dx];
     const assistStr=(r.assists||[]).join(' / ');
-    (r.procs||[]).forEach(p=>{rows.push([...base,p.desc,p.surgeon,assistStr,r.anes_type||'',r.obs||''].map(v=>`"${(v||'').replace(/"/g,'""')}"`).join(';'));});
+    const latLabels={D:'Direito',E:'Esquerdo',B:'Bilateral',NA:'Não aplicável'};
+    (r.procs||[]).forEach(p=>{rows.push([...base,p.desc,latLabels[p.lat]||'',p.surgeon,assistStr,r.anes_type||'',r.obs||''].map(v=>`"${(v||'').replace(/"/g,'""')}"`).join(';'));});
   });
   const blob=new Blob(['\uFEFF'+rows.join('\n')],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
