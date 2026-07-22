@@ -10,7 +10,7 @@
     --ink:#0f1923;--ink-soft:#3a4a57;--ink-mute:#7a8c99;--rule:#d0dae0;
     --bg:#f6f8fa;--surface:#fff;--accent:#1a5f7a;--accent-lt:#e8f4f8;
     --danger:#c0392b;--ouvido:#2e86c1;--nariz:#27ae60;--pediatrica:#8e44ad;
-    --laringo:#d68910;--cervical:#c0392b;
+    --laringo:#d68910;--cervical:#c0392b;--plastica:#6d4c8e;--saos:#0e7c7b;
   }
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5;min-height:100vh}
@@ -45,7 +45,9 @@
   .stat-num{font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:600;color:var(--accent);line-height:1}
   .stat-label{font-size:11px;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.08em;margin-top:4px}
   .area-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle;flex-shrink:0}
-  .dot-ouvido{background:var(--ouvido)}.dot-nariz{background:var(--nariz)}.dot-pediatrica{background:var(--pediatrica)}.dot-laringo{background:var(--laringo)}.dot-cervical{background:var(--cervical)}
+  .dot-ouvido{background:var(--ouvido)}.dot-nariz{background:var(--nariz)}.dot-pediatrica{background:var(--pediatrica)}.dot-laringo{background:var(--laringo)}.dot-cervical{background:var(--cervical)}.dot-plastica{background:var(--plastica)}.dot-saos{background:var(--saos)}
+  .pill-plastica{background:#f0eaf7;color:var(--plastica)}
+  .pill-saos{background:#e0f4f4;color:var(--saos)}
 
   /* TOOLBAR */
   .toolbar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
@@ -224,6 +226,8 @@
       <option value="Pediátrica">Pediátrica</option>
       <option value="Laringologia">Laringologia</option>
       <option value="Cervical">Cervical</option>
+      <option value="Cirurgia Plástica Facial">Cirurgia Plástica Facial</option>
+      <option value="SAOS">SAOS</option>
     </select>
     <select class="filter" id="filterSurgeon" onchange="renderTable()">
       <option value="">Todos os cirurgiões</option>
@@ -387,12 +391,63 @@ const PROC_CAT = {
   'Ouvido':[
     {group:'Ouvido externo',items:['Canaloplastia do CAE (exostoses)','Otoplastia','Drenagem de hematoma do pavilhão auricular','Excisão de lesão do pavilhão auricular','Cirurgia de estenose adquirida do CAE']},
     {group:'Ouvido médio',items:['Miringotomia com colocação de tubos transtimpânicos (TTT)','Remoção de TTT','Timpanotomia exploradora','Miringoplastia (enxerto de gordura do lóbulo)','Timpanoplastia tipo I — fáscia temporalis / cartilagem','Timpanoplastia tipo II com ossiculoplastia (PORP)','Timpanoplastia tipo III com ossiculoplastia (TORP)','Mastoidectomia técnica fechada sem timpanoplastia','Mastoidectomia técnica fechada com timpanoplastia tipo I','Mastoidectomia técnica fechada com timpanoplastia tipo II (PORP)','Mastoidectomia técnica fechada com timpanoplastia tipo III (TORP)','Mastoidectomia técnica fechada com timpanoplastia tipo IV','Mastoidectomia técnica aberta sem timpanoplastia','Mastoidectomia técnica aberta com timpanoplastia tipo II (PORP)','Mastoidectomia técnica aberta com timpanoplastia tipo III (TORP)','Mastoidectomia técnica aberta com timpanoplastia tipo IV','Estapedotomia','Reforço da janela redonda']},
-    {group:'Ouvido avançado / Base lateral do crânio',items:['Implante coclear','Descompressão do nervo facial (3ª porção)','Encerramento de deiscência do canal semicircular lateral','Ressecção lateral do rochedo','Mastoidectomia radical com abordagem fossa média e redução de herniação meningoencefálica']},
+    {group:'Ouvido avançado / Base lateral do crânio',items:['Implante coclear','Descompressão do nervo facial (3ª porção)','Encerramento de deiscência do canal semicircular lateral','Ressecção lateral do rochedo','Petrosectomia subtotal (lateral)','Petrosectomia total','Mastoidectomia radical com abordagem fossa média e redução de herniação meningoencefálica']},
   ],
   'Nariz / Seios':[
-    {group:'Septo, pirâmide e cornetos',items:['Septoplastia','Turbinoplastia inferior (radiofrequência / eletrocauterização submucosa)','Rinoplastia por abordagem aberta','Rinoplastia por abordagem fechada','Redução de fratura dos OPN','Excisão de quisto nasogeniano']},
-    {group:'CENS funcional',items:['Turbinoplastia média (concha bolhosa)','Etmoidectomia anterior parcial + antrostomia maxilar','Etmoidectomia posterior','Esfenoidotomia','Sinusotomia frontal — Draf I','Sinusotomia frontal — Draf IIa','Sinusotomia frontal — Draf IIb','Sinusotomia frontal — Draf III','Dacriocistorrinostomia (DCR) endoscópica','Descompressão endoscópica da órbita','Laqueação da artéria esfenopalatina']},
-    {group:'CENS avançada / Base do crânio anterior',items:['Encerramento endoscópico de fístula de LCR — teto etmoidal','Encerramento endoscópico de fístula de LCR — esfenoidal','Maxilectomia medial endoscópica','Abordagem endonasal alargada — transelar (adenoma hipofisário)','Abordagem endonasal alargada — transclival (cordoma)','Abordagem endonasal alargada — transcribiforme','Abordagem transmaxilar pterigóidea','Sinusotomia frontal por via externa (bicoronal)','Drenagem de abcesso supraorbitário','Encerramento de fístula oro-antral','Rinectomia total','Exenteração orbitária']},
+    {group:'Septo e cornetos',items:[
+      'Septoplastia de Cottle',
+      'Septoplastia endoscópica',
+      'Turbinoplastia inferior (radiofrequência / eletrocauterização submucosa)',
+      'Turbinoplastia média (concha bolhosa)',
+      'Excisão de quisto nasogeniano',
+    ]},
+    {group:'CENS funcional',items:[
+      'Antrostomia maxilar',
+      'Antrostomia maxilar por abordagem pré-lacrimal',
+      'Etmoidectomia anterior + antrostomia maxilar',
+      'Etmoidectomia total',
+      'Esfenoidotomia',
+      'Sinusotomia frontal — Draf I',
+      'Sinusotomia frontal — Draf IIa',
+      'Sinusotomia frontal — Draf IIb',
+      'Sinusotomia frontal — Draf III',
+      'Dacriocistorrinostomia (DCR) endoscópica',
+      'Descompressão endoscópica da órbita',
+      'Laqueação da artéria esfenopalatina',
+      'Laqueação das artérias etmoidais',
+    ]},
+    {group:'CENS avançada / Base do crânio anterior — endoscópica',items:[
+      'Encerramento endoscópico de defeito de base de crânio — teto etmoidal',
+      'Encerramento endoscópico de defeito de base de crânio — frontal',
+      'Encerramento endoscópico de defeito de base de crânio — esfenoidal',
+      'Maxilectomia medial endoscópica tipo 1',
+      'Maxilectomia medial endoscópica tipo 2',
+      'Maxilectomia medial endoscópica tipo 3',
+      'Maxilectomia medial endoscópica tipo 4 (Denker endoscópica)',
+      'Nasofaringectomia endoscópica',
+      'Abordagem endonasal alargada — transelar (adenoma hipofisário)',
+      'Abordagem endonasal alargada — transclival (cordoma)',
+      'Abordagem endonasal alargada — transcribiforme',
+      'Abordagem transfenoidal transplanum (descompressão nervo e quiasma óptico)',
+      'Abordagem transmaxilar fossa infratemporal',
+      'Craniectomia anterior endoscópica',
+      'Encerramento de defeito de base de crânio anterior com retalho de pericrânio (moneybox technique)',
+    ]},
+    {group:'Abordagens externas',items:[
+      'Abordagem externa por incisão de Lynch',
+      'Abordagem externa por Weber-Ferguson',
+      'Abordagem externa sublabial — Denker clássico',
+      'Abordagem externa midfacial degloving',
+      'Abordagem externa da órbita com transposição orbitária',
+      'Confecção de retalho bicoronal',
+      'Sinusotomia frontal por via externa (bicoronal)',
+      'Drenagem de abcesso supraorbitário',
+    ]},
+    {group:'Oncológica / Outras',items:[
+      'Encerramento de fístula oro-antral',
+      'Rinectomia total',
+      'Exenteração orbitária',
+    ]},
   ],
   'Pediátrica':[
     {group:'Orofaringe / adenoides',items:['Adenoidectomia','Amigdalectomia','Adenoamigdalectomia','Drenagem de abcesso periamigdalino (AG)','Drenagem de abcesso retrofaríngeo (AG)','Drenagem de abcesso parafaríngeo (AG)']},
@@ -400,16 +455,124 @@ const PROC_CAT = {
     {group:'Via aérea e outros',items:['Laringotraqueobroncoscopia rígida diagnóstica','Traqueotomia pediátrica','Frenotomia lingual','PEA-TC sob sedação (BO)']},
   ],
   'Laringologia':[
-    {group:'Microcirurgia endolaríngea — benigna / fonocirurgia',items:['Microlaringoscopia direta em suspensão — biópsia da laringe','MLDS — exérese de pólipo da corda vocal','MLDS — exérese de quisto da corda vocal','MLDS — exérese de granuloma da corda vocal','MLDS — cirurgia de Hirano (edema de Reinke)','MLDS — medialização por injeção (hidroxiapatite de cálcio)','MLDS — excisão de papiloma laríngeo + mitomicina C','MLDS — cordotomia posterior']},
+    {group:'Microcirurgia endolaríngea — benigna / fonocirurgia',items:[
+      'Microlaringoscopia direta em suspensão — biópsia da laringe',
+      'MLDS — exérese de pólipo da corda vocal',
+      'MLDS — exérese de quisto da corda vocal',
+      'MLDS — exérese de granuloma da corda vocal',
+      'MLDS — cirurgia de Hirano (edema de Reinke)',
+      'MLDS — medialização por injeção (hidroxiapatite de cálcio)',
+      'MLDS — excisão de papiloma laríngeo + mitomicina C',
+      'MLDS — cordotomia posterior',
+      'MLDS — aritenoidectomia parcial com laser CO2',
+      'MLDS — cordectomia tipo I (instrumentos frios)',
+      'MLDS — injeção intracordal de dexametasona',
+      'MLDS — injeção intracordal de toxina botulínica',
+      'MLDS — injeção em banda ventricular de toxina botulínica',
+      'MLDS — glotoplastia de Wendler',
+      'MLDS — Laser Assisted Voice Adjustment (LAVA)',
+    ]},
     {group:'Microcirurgia endolaríngea — oncológica (laser CO2)',items:['Cordectomia tipo I (laser CO2)','Cordectomia tipo II (laser CO2)','Cordectomia tipo III (laser CO2)','Cordectomia tipo IV (laser CO2)','Cordectomia tipo Va (laser CO2)','Cordectomia tipo Vb (laser CO2)']},
     {group:'Cirurgia da laringe — oncológica aberta',items:['Laringectomia total','Laringectomia parcial supraglótica','Laringectomia parcial supracricóidea (cricohioidopexia — CHP)','Faringolaringectomia total']},
     {group:'Traqueia e esófago',items:['Traqueotomia eletiva','Traqueotomia de urgência','Colocação de prótese fonatória primária','Colocação de prótese fonatória secundária','Esofagoscopia rígida']},
     {group:'Patologia do sono',items:['Endoscopia sob sono induzido (DISE)','Uvulopalatoplastia (técnica de Fujita)','Uvulopalatofaringoplastia (UPFP)','Faringoplastia de expansão','Amigdalotomia lingual']},
   ],
   'Cervical':[
-    {group:'Benigna',items:['Parotidectomia superficial','Parotidectomia total','Submandibulectomia','Tiroidectomia total','Hemi-tiroidectomia','Excisão de quisto do tracto tireoglosso (Sistrunk)','Excisão de quisto branquial','Cervicotomia exploradora','Drenagem de abcesso cervical profundo']},
-    {group:'Oncológica cervical',items:['Esvaziamento ganglionar cervical seletivo (I–III)','Esvaziamento ganglionar cervical seletivo (II–IV)','Esvaziamento ganglionar cervical seletivo (I–V)','Esvaziamento ganglionar cervical modificado radical (I–V)']},
-    {group:'Oncológica cavidade oral / faringe',items:['Glossectomia parcial com encerramento primário','Glossectomia parcial com retalho livre','Pelviglossectomia parcial com mandibulectomia marginal','Pelviglossectomia parcial com mandibulectomia segmentar','Pelviglossectomia parcial com mandibulotomia de acesso','Maxilectomia meso/infra-estrutura','Maxilectomia total','Glossotomia mediana de acesso']},
+    {group:'Patologia benigna — glândulas salivares',items:[
+      'Submaxilectomia',
+      'Excisão de rânula',
+      'Parotidectomia superficial',
+      'Parotidectomia subtotal',
+      'Parotidectomia profunda',
+      'Parotidectomia radical',
+    ]},
+    {group:'Patologia benigna — tiróide',items:[
+      'Hemi-tiroidectomia direita',
+      'Hemi-tiroidectomia esquerda',
+      'Tiroidectomia total',
+      'Istmectomia',
+    ]},
+    {group:'Patologia benigna — outras',items:[
+      'Excisão de quisto do canal tireoglosso (Sistrunk)',
+      'Excisão de quisto branquial',
+      'Cervicotomia exploradora',
+      'Cervicotomia para drenagem de abcesso cervical profundo',
+      'Cervicotomia para drenagem de hematoma cervical',
+      'Adenectomia',
+    ]},
+    {group:'Cavidade oral / Faringe',items:[
+      'Excisão de lesão da mucosa jugal',
+      'Glossectomia parcial',
+      'Hemi-glossectomia',
+      'Glossectomia total',
+      'Pelviglossectomia parcial',
+      'Pelviglossectomia subtotal',
+      'Pelviglossectomia total',
+      'Maxilectomia — meso-estrutura',
+      'Maxilectomia — meso + infra-estrutura',
+      'Maxilectomia total',
+      'Maxilectomia alargada (com exenteração da órbita)',
+      'Mandibulectomia marginal',
+      'Mandibulectomia segmentar',
+      'Hemimandibulectomia',
+      'Mandibulectomia subtotal',
+      'Excisão de lesão do espaço parafaríngeo por via transoral',
+      'Excisão de lesão do espaço parafaríngeo por via cervicotomia',
+    ]},
+    {group:'Oncológica cervical',items:[
+      'Esvaziamento ganglionar cervical seletivo — áreas I–III',
+      'Esvaziamento ganglionar cervical seletivo — áreas II–III',
+      'Esvaziamento ganglionar cervical seletivo — áreas II–IV',
+      'Esvaziamento ganglionar cervical seletivo — áreas I–V',
+      'Esvaziamento ganglionar cervical seletivo — áreas II–V',
+      'Esvaziamento ganglionar cervical radical clássico',
+      'Esvaziamento ganglionar cervical radical modificado',
+      'Amputação do pavilhão auricular parcial',
+      'Amputação do pavilhão auricular total',
+      'Rinectomia total',
+      'Rinectomia parcial',
+      'Excisão de tumor cutâneo',
+    ]},
+    {group:'Cirurgia da laringe e faringe',items:[
+      'Laringectomia total sem tiroidectomia',
+      'Laringectomia total com tiroidectomia',
+      'Faringolaringectomia total',
+      'Colocação de prótese fonatória primária',
+      'Colocação de prótese fonatória secundária',
+      'Excisão de laringocelo',
+      'Redução de fratura laríngea',
+    ]},
+  ],
+  'Cirurgia Plástica Facial':[
+    {group:'Orelha',items:['Otoplastia','Revisão de Otoplastia','Lobuloplastia','Excisão de lesão cutânea (ex: quisto sebáceo)']},
+    {group:'Nariz',items:['Rinoplastia por abordagem aberta estruturada','Rinoplastia por abordagem aberta de preservação','Rinoplastia por abordagem fechada estruturada','Rinoplastia por abordagem fechada de preservação','Rinoplastia de revisão','Redução de fratura nasal']},
+    {group:'Colheitas',items:['Colheita de cartilagem auricular','Colheita de cartilagem da costela','Colheita de fáscia temporal']},
+    {group:'Face',items:['Frontoplastia','Mentoplastia','Tirocondroplastia']},
+  ],
+  'SAOS':[
+    {group:'Palato / Úvula', items:[
+      'Uvulopalatofaringoplastia (UPPP)',
+      'Uvulopalatoplastia (UPP)',
+      'Uvuloplastia',
+      'Palatoplastia anterior',
+      'Palatoplastia por radiofrequência',
+    ]},
+    {group:'Faringoplastia', items:[
+      'Faringoplastia farpada',
+      'Faringoplastia de expansão',
+      'Faringoplastia lateral',
+    ]},
+    {group:'Base da língua / Epiglote', items:[
+      'Amigdalectomia lingual — coblation',
+      'Amigdalectomia lingual — laser CO2',
+      'Stiffening epiglottic procedure — laser CO2',
+      'Epiglotectomia medial',
+      'Epiglotectomia lateral',
+      'Supraglotoplastia',
+    ]},
+    {group:'Diagnóstico', items:[
+      'DISE (Drug-Induced Sleep Endoscopy)',
+    ]},
   ],
 };
 
@@ -481,6 +644,8 @@ const AREA_META = {
   'Pediátrica':    {cls:'pediatrica',dot:'dot-pediatrica',pill:'pill-pediatrica'},
   'Laringologia':  {cls:'laringo',   dot:'dot-laringo',   pill:'pill-laringo'},
   'Cervical':      {cls:'cervical',  dot:'dot-cervical',  pill:'pill-cervical'},
+  'Cirurgia Plástica Facial': {cls:'plastica', dot:'dot-plastica', pill:'pill-plastica'},
+  'SAOS': {cls:'saos', dot:'dot-saos', pill:'pill-saos'},
 };
 
 // ── AUTOCOMPLETE ──────────────────────────────────────────────────────────
@@ -530,7 +695,7 @@ function onAreaChange() {
 }
 
 // ── MULTI-SELECT ──────────────────────────────────────────────────────────
-const AREAS = ['Ouvido','Nariz / Seios','Pediátrica','Laringologia','Cervical'];
+const AREAS = ['Ouvido','Nariz / Seios','Pediátrica','Laringologia','Cervical','Cirurgia Plástica Facial','SAOS'];
 const msState = {assist: new Set(), area: new Set()};
 function buildOptions(key, filter='') {
   const container = document.getElementById(key+'Options');
